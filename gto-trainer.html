@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTO Poker Trainer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .scenario-selector {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 25px;
+        }
+
+        .selector-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #4facfe;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .scenario-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .scenario-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            border-color: #4facfe;
+        }
+
+        .scenario-btn.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-color: #4facfe;
+        }
+
+        .scenario-category {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .trainer-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .situation-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #f093fb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .poker-table {
+            background: rgba(0, 100, 0, 0.3);
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-radius: 150px;
+            padding: 40px 20px;
+            margin-bottom: 25px;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .hand-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .hand-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .cards {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 5px;
+        }
+
+        .board {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .board-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .board-cards {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 8px;
+        }
+
+        .situation-details {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #4facfe;
+        }
+
+        .action-question {
+            background: rgba(240, 147, 251, 0.2);
+            border: 2px solid rgba(240, 147, 251, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.03);
+        }
+
+        .action-btn.selected {
+            background: rgba(79, 172, 254, 0.3);
+            border-color: #4facfe;
+        }
+
+        .reveal-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .reveal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+        }
+
+        .reveal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .gto-solution {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .solution-hidden {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.6;
+        }
+
+        .solution-hidden-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .gto-strategy {
+            display: none;
+        }
+
+        .gto-strategy.show {
+            display: block;
+        }
+
+        .frequency-bars {
+            margin-bottom: 30px;
+        }
+
+        .frequency-item {
+            margin-bottom: 20px;
+        }
+
+        .frequency-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .action-name {
+            font-size: 16px;
+        }
+
+        .frequency-percent {
+            color: #4facfe;
+            font-size: 16px;
+        }
+
+        .frequency-bar-bg {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .frequency-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            transition: width 0.8s ease;
+        }
+
+        .frequency-bar-fill.fold {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .frequency-bar-fill.call {
+            background: linear-gradient(135deg, #ffd89b 0%, #f6a60a 100%);
+        }
+
+        .frequency-bar-fill.raise {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .explanation-box {
+            background: rgba(79, 172, 254, 0.2);
+            border: 2px solid rgba(79, 172, 254, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .explanation-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #4facfe;
+        }
+
+        .explanation-text {
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .explanation-text strong {
+            color: #ffd89b;
+        }
+
+        .key-concepts {
+            background: rgba(67, 233, 123, 0.2);
+            border: 2px solid rgba(67, 233, 123, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .concepts-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #43e97b;
+        }
+
+        .concept-item {
+            padding: 8px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .concept-item::before {
+            content: "→ ";
+            color: #43e97b;
+            font-weight: 700;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: rgba(67, 233, 123, 0.3);
+            border: 2px solid #43e97b;
+            color: #43e97b;
+        }
+
+        .feedback.incorrect {
+            background: rgba(240, 147, 251, 0.3);
+            border: 2px solid #f093fb;
+            color: #f093fb;
+        }
+
+        @media (max-width: 968px) {
+            .trainer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 GTO Poker Trainer</h1>
+        <p class="subtitle">Learn Game Theory Optimal strategy with real poker scenarios</p>
+
+        <div class="scenario-selector">
+            <div class="selector-title">Choose a Scenario</div>
+            <div class="scenario-grid" id="scenarioGrid"></div>
+        </div>
+
+        <div class="trainer-content">
+            <div class="situation-panel">
+                <div class="panel-title">
+                    🎯 Current Situation
+                </div>
+
+                <div class="poker-table">
+                    <div class="hand-display">
+                        <div class="hand-label">Your Hand</div>
+                        <div class="cards" id="heroHand">A♠ K♠</div>
+                    </div>
+                    <div class="board" id="boardSection" style="display: none;">
+                        <div class="board-label">Board</div>
+                        <div class="board-cards" id="boardCards"></div>
+                    </div>
+                </div>
+
+                <div class="situation-details" id="situationDetails"></div>
+
+                <div class="action-question" id="actionQuestion">
+                    What should you do?
+                </div>
+
+                <div class="action-buttons" id="actionButtons"></div>
+
+                <button class="reveal-btn" id="revealBtn" onclick="revealGTO()" disabled>
+                    Show GTO Solution
+                </button>
+
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="gto-solution">
+                <div class="panel-title">
+                    📊 GTO Solution
+                </div>
+
+                <div class="solution-hidden" id="solutionHidden">
+                    <div class="solution-hidden-icon">🔒</div>
+                    <div>Select your action to see the GTO solution</div>
+                </div>
+
+                <div class="gto-strategy" id="gtoStrategy">
+                    <div class="frequency-bars" id="frequencyBars"></div>
+
+                    <div class="explanation-box">
+                        <div class="explanation-title">Why This Strategy?</div>
+                        <div class="explanation-text" id="explanationText"></div>
+                    </div>
+
+                    <div class="key-concepts">
+                        <div class="concepts-title">Key GTO Concepts</div>
+                        <div id="keyConcepts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedScenario = null;
+        let selectedAction = null;
+
+        const scenarios = [
+            {
+                id: 'btn_open',
+                category: 'Pre-flop',
+                name: 'Button Opening Range',
+                hand: 'A♠ K♦',
+                board: null,
+                position: 'Button (BTN)',
+                action: 'Folds to you',
+                pot: '1.5BB',
+                stack: '100BB',
+                question: 'What should you do with AKo on the Button?',
+                actions: ['Fold', 'Call', 'Raise to 2.5BB', 'Raise to 3BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Raise to 2.5BB', percent: 100, type: 'raise' }
+                    ],
+                    correctAction: 2,
+                    explanation: "AKo is a <strong>premium hand</strong> that should always be raised from the Button. GTO strategy raises 100% of the time because:<br><br>• AK has high equity against any range<br>• Position allows you to realize your equity<br>• You want to build the pot with a strong hand<br>• Folding or calling would be extremely exploitable<br><br>From the Button, you should be opening approximately 48% of hands, and AK is at the very top of that range.",
+                    concepts: [
+                        "Premium hands should always raise in late position",
+                        "Position = power in poker (you act last post-flop)",
+                        "Building pots with strong hands maximizes EV",
+                        "GTO is unexploitable - balanced ranges prevent opponents from adjusting"
+                    ]
+                }
+            },
+            {
+                id: 'bb_defend',
+                category: 'Pre-flop',
+                name: 'BB Defense vs BTN',
+                hand: 'K♥ 9♥',
+                board: null,
+                position: 'Big Blind (BB)',
+                action: 'BTN raises to 2.5BB, SB folds',
+                pot: '4BB',
+                stack: '100BB',
+                question: 'What should you do with K9s facing a BTN open?',
+                actions: ['Fold', 'Call', '3-bet to 9BB', '3-bet to 12BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Call', percent: 75, type: 'call' },
+                        { action: '3-bet to 9BB', percent: 25, type: 'raise' }
+                    ],
+                    correctAction: 1,
+                    explanation: "K9s is a <strong>borderline defending hand</strong> from BB against BTN. GTO plays it as a <strong>mixed strategy</strong>:<br><br>• Call 75% of the time - K9s plays well post-flop but isn't strong enough to always 3-bet<br>• 3-bet 25% of the time - for balance and to occasionally apply pressure<br><br>Why mostly call? You're getting 2.6:1 pot odds (need ~28% equity), and K9s has ~39% equity vs BTN's wide opening range. The hand has good playability - can make straights, flushes, and strong pairs.",
+                    concepts: [
+                        "Defend wider from BB due to good pot odds (already invested 1BB)",
+                        "Mixed strategies make you unpredictable",
+                        "Suited hands have better playability than offsuit",
+                        "Against wide ranges, medium strength hands increase in value"
+                    ]
+                }
+            },
+            {
+                id: 'cbet_flop',
+                category: 'Post-flop',
+                name: 'C-Bet on Dry Flop',
+                hand: 'A♠ Q♦',
+                board: 'K♥ 7♠ 2♣',
+                position: 'Button (BTN)',
+                action: 'You raised pre-flop, BB called. BB checks.',
+                pot: '10BB',
+                stack: '95BB',
+                question: 'What should you do on this flop?',
+                actions: ['Check', 'Bet 3BB', 'Bet 6BB', 'Bet 10BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Bet 3BB', percent: 70, type: 'raise' },
+                        { action: 'Check', percent: 30, type: 'fold' }
+                    ],
+                    correctAction: 1,
+                    explanation: "With AQ on K72 rainbow, GTO uses a <strong>high frequency small c-bet</strong>:<br><br>• Bet small (30% pot) 70% of the time<br>• Check 30% of the time<br><br>Why small bet? This board heavily favors your range as the pre-flop raiser. You have all the strong Kings (AK, KQ, KJ) while BB has fewer. A small bet:<br><br>• Denies equity to overcards and backdoor draws<br>• Keeps your bluffs cheap<br>• Still gets value from weaker Kings<br>• Forces BB to fold weak pairs<br><br>You check 30% to protect your checking range with some strong hands (like AA, KK).",
+                    concepts: [
+                        "C-betting frequency depends on board texture and range advantage",
+                        "Smaller bets on dry boards are more efficient",
+                        "Range advantage = you have more strong hands than opponent",
+                        "Always protect your checking range with some value hands"
+                    ]
+                }
+            },
+            {
+                id: 'flush_draw',
+                category: 'Post-flop',
+                name: 'Flush Draw Decision',
+                hand: 'A♥ 8♥',
+                board: 'K♥ 9♥ 3♠',
+                position: 'Big Blind (BB)',
+                action: 'You called pre-flop, BTN c-bets 7BB.',
+                pot: '17BB',
+                stack: '90BB',
+                question: 'What should you do with the nut flush draw?',
+                actions: ['Fold', 'Call', 'Raise to 20BB', 'Raise to 28BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Call', percent: 60, type: 'call' },
+                        { action: 'Raise to 20BB', percent: 40, type: 'raise' }
+                    ],
+                    correctAction: 1,
+                    explanation: "The nut flush draw is played as a <strong>mixed strategy in GTO</strong>:<br><br>• Call 60% - to realize your equity and keep pot manageable<br>• Raise 40% - as a semi-bluff for balance<br><br>Why mix? You have 9 outs (36% equity on turn), plus overcards. Raising sometimes:<br>• Balances your raising range (not just value)<br>• Applies pressure on marginal hands<br>• Builds pot when you're ahead in equity<br><br>Calling sometimes:<br>• Keeps pot smaller when behind<br>• Allows you to see turn cheaply<br>• Prevents opponent from shoving profitably",
+                    concepts: [
+                        "Strong draws warrant aggressive play but not always",
+                        "Balance prevents opponents from exploiting you",
+                        "Pot control is important when out of position",
+                        "Semi-bluffing = betting/raising with a draw that has equity"
+                    ]
+                }
+            },
+            {
+                id: '3bet_pot',
+                category: 'Pre-flop',
+                name: '3-Bet or Fold Decision',
+                hand: 'J♠ J♥',
+                board: null,
+                position: 'Cutoff (CO)',
+                action: 'MP raises to 3BB',
+                pot: '4.5BB',
+                stack: '100BB',
+                question: 'What should you do with JJ vs an MP open?',
+                actions: ['Fold', 'Call', '3-bet to 9BB', '3-bet to 12BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: '3-bet to 9BB', percent: 85, type: 'raise' },
+                        { action: 'Call', percent: 15, type: 'call' }
+                    ],
+                    correctAction: 2,
+                    explanation: "JJ is a <strong>strong hand that primarily 3-bets</strong> against MP:<br><br>• 3-bet 85% of the time - JJ is too strong to just call<br>• Call 15% for deception and balance<br><br>Why mostly 3-bet?<br>• JJ crushes MP's opening range<br>• Position advantage post-flop<br>• Builds pot with equity advantage<br>• Forces MP to fold many hands that have equity against you<br>• Prevents MP from easily realizing equity with weaker hands<br><br>The small calling frequency keeps your flatting range protected and makes you harder to play against.",
+                    concepts: [
+                        "Strong hands should be played aggressively",
+                        "3-betting builds pots and denies equity",
+                        "Even strong hands can be flatted occasionally for balance",
+                        "Linear vs polarized ranges - JJ is in your linear 3-bet range"
+                    ]
+                }
+            },
+            {
+                id: 'river_bluff',
+                category: 'Post-flop',
+                name: 'River Bluff Spot',
+                hand: 'A♠ 5♠',
+                board: 'K♥ Q♠ 8♠ 3♦ 2♣',
+                position: 'Button (BTN)',
+                action: 'You bet flop and turn, BB called both. BB checks river. Pot: 40BB.',
+                pot: '40BB',
+                stack: '60BB',
+                question: 'What should you do having missed your flush draw?',
+                actions: ['Check (give up)', 'Bet 15BB', 'Bet 30BB', 'Bet 50BB (overbet)'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Bet 30BB', percent: 45, type: 'raise' },
+                        { action: 'Check (give up)', percent: 55, type: 'fold' }
+                    ],
+                    correctAction: 2,
+                    explanation: "A5s on this river is a <strong>polarized bluffing candidate</strong> that should bet about 45% of the time:<br><br>• Bet 30BB (75% pot) 45% of the time<br>• Check and give up 55% of the time<br><br>Why bet sometimes? You represented a strong hand by betting flop and turn. The river brick doesn't help many hands. Your bet tells a credible story of AK, KQ, AA, etc.<br><br>Why check sometimes? You can't bluff every time or you'll be exploitable. You need to give up with some bluffs to balance your checking range.<br><br>A5s is perfect because it blocks some Aces BB might call with.",
+                    concepts: [
+                        "Bluff frequency must be balanced with value bets",
+                        "Blockers matter - A5 blocks some Ax combos opponent calls with",
+                        "Missed draws often make good bluffs (you'd bet value hands similarly)",
+                        "Polarization = betting very strong hands and bluffs, checking medium strength"
+                    ]
+                }
+            },
+            {
+                id: 'check_raise',
+                category: 'Post-flop',
+                name: 'Check-Raise or Call',
+                hand: 'T♥ T♠',
+                board: 'T♣ 7♥ 2♠',
+                position: 'Big Blind (BB)',
+                action: 'You called pre-flop vs BTN. BTN c-bets 6BB into 10BB pot.',
+                pot: '16BB',
+                stack: '90BB',
+                question: 'What should you do with top set?',
+                actions: ['Fold', 'Call', 'Raise to 18BB', 'Raise to 24BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Raise to 18BB', percent: 65, type: 'raise' },
+                        { action: 'Call', percent: 35, type: 'call' }
+                    ],
+                    correctAction: 2,
+                    explanation: "Top set is <strong>extremely strong but uses a mixed strategy</strong>:<br><br>• Check-raise to 18BB about 65% of the time<br>• Call 35% of the time<br><br>Why mostly raise? You have a monster on a dry board and want to build the pot. Check-raising:<br>• Gets value from worse hands<br>• Builds pot with the nuts<br>• Balances your check-raising range (not just bluffs)<br><br>Why call sometimes?<br>• Keeps BTN's bluffs in<br>• Protects your calling range<br>• Allows BTN to continue bluffing on later streets<br>• Prevents you from being exploitable by only check-raising strong hands",
+                    concepts: [
+                        "Even the nuts should be played with mixed frequencies",
+                        "Check-raise ranges need balance (value + bluffs)",
+                        "Trapping (slowplaying) is valid but should be minority of the time",
+                        "Dry boards favor aggressive play with strong hands"
+                    ]
+                }
+            },
+            {
+                id: 'facing_3bet',
+                category: 'Pre-flop',
+                name: 'Facing a 3-Bet',
+                hand: 'Q♠ J♠',
+                board: null,
+                position: 'Button (BTN)',
+                action: 'You raised to 2.5BB, BB 3-bets to 9BB. Pot: 12BB.',
+                pot: '12BB',
+                stack: '97.5BB',
+                question: 'What should you do with QJs facing a 3-bet?',
+                actions: ['Fold', 'Call', '4-bet to 24BB', '4-bet to 30BB'],
+                gtoSolution: {
+                    frequencies: [
+                        { action: 'Call', percent: 75, type: 'call' },
+                        { action: 'Fold', percent: 20, type: 'fold' },
+                        { action: '4-bet to 24BB', percent: 5, type: 'raise' }
+                    ],
+                    correctAction: 1,
+                    explanation: "QJs vs a BB 3-bet is a <strong>mixed strategy with primary calling</strong>:<br><br>• Call 75% - QJs plays well post-flop with position<br>• Fold 20% - it's not strong enough to always continue<br>• 4-bet bluff 5% - for balance<br><br>Why mostly call? You're getting 2.4:1 odds and have position. QJs:<br>• Has ~45% equity vs BB's 3-bet range<br>• Makes strong hands (straights, flushes, top pairs)<br>• Has good playability in position<br><br>The small folding frequency prevents you from becoming a calling station. The tiny 4-bet frequency keeps BB honest.",
+                    concepts: [
+                        "Position allows you to defend wider vs 3-bets",
+                        "Suited broadways have excellent playability",
+                        "Mixed strategies at every decision point",
+                        "Don't need to defend every hand - folding is okay"
+                    ]
+                }
+            }
+        ];
+
+        function init() {
+            renderScenarioButtons();
+            loadScenario(scenarios[0]);
+        }
+
+        function renderScenarioButtons() {
+            const grid = document.getElementById('scenarioGrid');
+            scenarios.forEach(scenario => {
+                const btn = document.createElement('button');
+                btn.className = 'scenario-btn';
+                btn.innerHTML = `
+                    <div class="scenario-category">${scenario.category}</div>
+                    <div>${scenario.name}</div>
+                `;
+                btn.onclick = () => loadScenario(scenario);
+                grid.appendChild(btn);
+            });
+        }
+
+        function loadScenario(scenario) {
+            selectedScenario = scenario;
+            selectedAction = null;
+
+            // Update active button
+            document.querySelectorAll('.scenario-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', scenarios[idx].id === scenario.id);
+            });
+
+            // Update situation display
+            document.getElementById('heroHand').textContent = scenario.hand;
+            
+            if (scenario.board) {
+                document.getElementById('boardSection').style.display = 'block';
+                document.getElementById('boardCards').textContent = scenario.board;
+            } else {
+                document.getElementById('boardSection').style.display = 'none';
+            }
+
+            // Update details
+            const detailsHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">Position</span>
+                    <span class="detail-value">${scenario.position}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Action</span>
+                    <span class="detail-value">${scenario.action}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Pot</span>
+                    <span class="detail-value">${scenario.pot}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Stack</span>
+                    <span class="detail-value">${scenario.stack}</span>
+                </div>
+            `;
+            document.getElementById('situationDetails').innerHTML = detailsHTML;
+            document.getElementById('actionQuestion').textContent = scenario.question;
+
+            // Render action buttons
+            const actionContainer = document.getElementById('actionButtons');
+            actionContainer.innerHTML = '';
+            scenario.actions.forEach((action, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'action-btn';
+                btn.textContent = action;
+                btn.onclick = () => selectAction(idx);
+                actionContainer.appendChild(btn);
+            });
+
+            // Reset solution display
+            document.getElementById('solutionHidden').style.display = 'block';
+            document.getElementById('gtoStrategy').classList.remove('show');
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('revealBtn').disabled = true;
+        }
+
+        function selectAction(index) {
+            selectedAction = index;
+
+            // Update UI
+            document.querySelectorAll('.action-btn').forEach((btn, idx) => {
+                btn.classList.toggle('selected', idx === index);
+            });
+
+            document.getElementById('revealBtn').disabled = false;
+        }
+
+        function revealGTO() {
+            if (selectedAction === null) return;
+
+            const scenario = selectedScenario;
+            const gto = scenario.gtoSolution;
+
+            // Show/hide sections
+            document.getElementById('solutionHidden').style.display = 'none';
+            document.getElementById('gtoStrategy').classList.add('show');
+
+            // Render frequency bars
+            const freqContainer = document.getElementById('frequencyBars');
+            freqContainer.innerHTML = '';
+            
+            gto.frequencies.forEach(freq => {
+                const item = document.createElement('div');
+                item.className = 'frequency-item';
+                item.innerHTML = `
+                    <div class="frequency-header">
+                        <span class="action-name">${freq.action}</span>
+                        <span class="frequency-percent">${freq.percent}%</span>
+                    </div>
+                    <div class="frequency-bar-bg">
+                        <div class="frequency-bar-fill ${freq.type}" style="width: ${freq.percent}%">
+                            ${freq.percent}%
+                        </div>
+                    </div>
+                `;
+                freqContainer.appendChild(item);
+            });
+
+            // Show explanation
+            document.getElementById('explanationText').innerHTML = gto.explanation;
+
+            // Show key concepts
+            const conceptsHTML = gto.concepts.map(concept => 
+                `<div class="concept-item">${concept}</div>`
+            ).join('');
+            document.getElementById('keyConcepts').innerHTML = conceptsHTML;
+
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            const userAction = scenario.actions[selectedAction];
+            const correctAction = scenario.actions[gto.correctAction];
+            
+            if (selectedAction === gto.correctAction || 
+                gto.frequencies.some(f => f.action === userAction && f.percent > 0)) {
+                feedback.className = 'feedback correct show';
+                feedback.textContent = `✓ Great! "${userAction}" is part of the GTO strategy!`;
+            } else {
+                feedback.className = 'feedback incorrect show';
+                feedback.textContent = `✗ Not quite. The primary GTO action is "${correctAction}"`;
+            }
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

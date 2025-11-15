@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker EV Decision Tree Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #3498db;
+        }
+
+        .scenario-selector {
+            margin-bottom: 25px;
+        }
+
+        .scenario-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .scenario-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+        }
+
+        .scenario-btn.active {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-color: #3498db;
+        }
+
+        .info-section {
+            background: rgba(52, 152, 219, 0.2);
+            border: 2px solid rgba(52, 152, 219, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+
+        .info-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .ev-summary {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid rgba(46, 204, 113, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .ev-summary-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2ecc71;
+        }
+
+        .ev-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        .ev-action {
+            font-weight: 600;
+        }
+
+        .ev-value {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .ev-value.positive {
+            color: #2ecc71;
+        }
+
+        .ev-value.negative {
+            color: #e74c3c;
+        }
+
+        .best-action {
+            background: rgba(46, 204, 113, 0.3);
+            border: 2px solid #2ecc71;
+        }
+
+        .tree-canvas {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            min-height: 600px;
+            overflow-x: auto;
+        }
+
+        .tree-container {
+            min-width: 800px;
+        }
+
+        .decision-node {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: 3px solid #2980b9;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 300px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .node-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .node-description {
+            font-size: 13px;
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .branches {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            gap: 20px;
+        }
+
+        .branch {
+            flex: 1;
+            position: relative;
+        }
+
+        .branch-line {
+            width: 3px;
+            height: 40px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 100%);
+            margin: 0 auto;
+        }
+
+        .outcome-node {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .outcome-node.win {
+            background: rgba(46, 204, 113, 0.3);
+            border-color: #2ecc71;
+        }
+
+        .outcome-node.lose {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #e74c3c;
+        }
+
+        .outcome-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .outcome-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .outcome-probability {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .action-label {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .ev-calculation {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .ev-result {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .ev-result.positive {
+            color: #2ecc71;
+        }
+
+        .ev-result.negative {
+            color: #e74c3c;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .legend-item {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .sub-decision {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .formula-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .formula-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #3498db;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .branches {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌳 EV Decision Tree Builder</h1>
+        <p class="subtitle">Visualize complex poker decisions and calculate expected value for each path</p>
+
+        <div class="main-grid">
+            <div class="control-panel">
+                <div class="panel-title">Scenarios</div>
+                <div class="scenario-selector" id="scenarioSelector"></div>
+
+                <div class="info-section">
+                    <div class="info-title">📚 What is EV?</div>
+                    <div class="info-text">
+                        Expected Value (EV) is the average amount you'll win or lose over time. 
+                        Positive EV = profitable long-term. Negative EV = losing money long-term.
+                    </div>
+                </div>
+
+                <div class="ev-summary" id="evSummary">
+                    <div class="ev-summary-title">💰 EV Summary</div>
+                    <div id="evResults"></div>
+                </div>
+            </div>
+
+            <div class="tree-canvas">
+                <div class="tree-container" id="treeContainer"></div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);"></div>
+                        <span>Decision Node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(46, 204, 113, 0.5);"></div>
+                        <span>Win Outcome</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(231, 76, 60, 0.5);"></div>
+                        <span>Lose Outcome</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = [
+            {
+                id: 'bluff_catch',
+                name: 'River Bluff Catcher',
+                description: 'Should you call with a bluff catcher on the river?',
+                situation: {
+                    title: 'River Decision',
+                    description: 'You have A-high. Pot is $100. Opponent bets $75.',
+                    potSize: 100,
+                    betSize: 75
+                },
+                actions: [
+                    {
+                        name: 'Call',
+                        outcomes: [
+                            { result: 'Win (they bluff)', probability: 0.33, value: 175 },
+                            { result: 'Lose (they have it)', probability: 0.67, value: -75 }
+                        ]
+                    },
+                    {
+                        name: 'Fold',
+                        outcomes: [
+                            { result: 'You fold', probability: 1.0, value: 0 }
+                        ]
+                    }
+                ],
+                explanation: {
+                    formula: 'EV(Call) = (33% × $175) + (67% × -$75) = $57.75 - $50.25 = +$7.50',
+                    interpretation: 'You need to win 30% of the time to break even (pot odds). If opponent bluffs 33% of the time, calling is profitable!'
+                }
+            },
+            {
+                id: 'semi_bluff',
+                name: 'Semi-Bluff with Flush Draw',
+                description: 'Turn decision with a flush draw',
+                situation: {
+                    title: 'Turn Semi-Bluff Decision',
+                    description: 'You have nut flush draw. Pot: $200. You can check or bet $150.',
+                    potSize: 200,
+                    betSize: 150
+                },
+                actions: [
+                    {
+                        name: 'Bet $150',
+                        outcomes: [
+                            { result: 'Opponent folds', probability: 0.40, value: 200 },
+                            { 
+                                result: 'Opponent calls', 
+                                probability: 0.60, 
+                                value: 0,
+                                subDecision: {
+                                    title: 'River Outcome',
+                                    branches: [
+                                        { result: 'Hit flush (win $500)', probability: 0.20, value: 500 },
+                                        { result: 'Miss flush (lose $150)', probability: 0.80, value: -150 }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        name: 'Check',
+                        outcomes: [
+                            { result: 'See free river', probability: 1.0, value: 0,
+                                subDecision: {
+                                    title: 'River Outcome',
+                                    branches: [
+                                        { result: 'Hit flush (win ~$300)', probability: 0.20, value: 300 },
+                                        { result: 'Miss flush (win $0)', probability: 0.80, value: 0 }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ],
+                explanation: {
+                    formula: 'EV(Bet) = 40% × $200 + 60% × (20% × $500 + 80% × -$150) = $80 + 60% × (-$20) = $68\nEV(Check) = 20% × $300 + 80% × $0 = $60',
+                    interpretation: 'Betting has higher EV because of fold equity! Even though you might miss, making opponent fold 40% of the time adds significant value.'
+                }
+            },
+            {
+                id: 'squeeze_play',
+                name: 'Squeeze Play Decision',
+                description: 'Pre-flop 3-bet squeeze opportunity',
+                situation: {
+                    title: 'Pre-Flop Squeeze',
+                    description: 'CO opens $10, BTN calls. You have A5s in SB. Pot: $25.',
+                    potSize: 25,
+                    betSize: 0
+                },
+                actions: [
+                    {
+                        name: '3-bet to $45',
+                        outcomes: [
+                            { result: 'Both fold', probability: 0.60, value: 25 },
+                            { result: 'One calls', probability: 0.35, value: 0,
+                                subDecision: {
+                                    title: 'Post-Flop',
+                                    branches: [
+                                        { result: 'Win pot (~$100)', probability: 0.35, value: 100 },
+                                        { result: 'Lose (-$45)', probability: 0.65, value: -45 }
+                                    ]
+                                }
+                            },
+                            { result: 'Get 4-bet (fold)', probability: 0.05, value: -45 }
+                        ]
+                    },
+                    {
+                        name: 'Fold',
+                        outcomes: [
+                            { result: 'Fold SB', probability: 1.0, value: -0.5 }
+                        ]
+                    }
+                ],
+                explanation: {
+                    formula: 'EV(3-bet) = 60% × $25 + 35% × (35% × $100 + 65% × -$45) + 5% × -$45\n= $15 + 35% × $12.25 + (-$2.25) = $17.04',
+                    interpretation: 'The squeeze is very profitable because both opponents have weak ranges and fold often. Your fold equity makes up for the times you get called with the worst hand.'
+                }
+            },
+            {
+                id: 'set_mining',
+                name: 'Set Mining Decision',
+                description: 'Should you call pre-flop to hit a set?',
+                situation: {
+                    title: 'Pre-Flop Set Mining',
+                    description: 'You have 5♠5♥. Opponent raises to $20. Pot: $23. Stack: $500.',
+                    potSize: 23,
+                    betSize: 20
+                },
+                actions: [
+                    {
+                        name: 'Call $20',
+                        outcomes: [
+                            { result: 'Hit set (~12%)', probability: 0.12, value: 0,
+                                subDecision: {
+                                    title: 'Post-Flop with Set',
+                                    branches: [
+                                        { result: 'Get paid $200+', probability: 0.70, value: 200 },
+                                        { result: 'Small pot $40', probability: 0.30, value: 40 }
+                                    ]
+                                }
+                            },
+                            { result: 'Miss set (88%)', probability: 0.88, value: -20 }
+                        ]
+                    },
+                    {
+                        name: 'Fold',
+                        outcomes: [
+                            { result: 'Fold', probability: 1.0, value: 0 }
+                        ]
+                    }
+                ],
+                explanation: {
+                    formula: 'EV(Call) = 12% × (70% × $200 + 30% × $40) + 88% × -$20\n= 12% × $152 + (-$17.60) = $18.24 - $17.60 = +$0.64',
+                    interpretation: 'Set mining is barely profitable here. You need "implied odds" - the ability to win a big pot when you hit. With deep stacks ($500), this call is good. With short stacks, fold.'
+                }
+            },
+            {
+                id: 'hero_call',
+                name: 'Hero Call or Fold',
+                description: 'Tough river decision with medium strength',
+                situation: {
+                    title: 'River Hero Call',
+                    description: 'You have top pair. Pot: $300. Opponent shoves $400.',
+                    potSize: 300,
+                    betSize: 400
+                },
+                actions: [
+                    {
+                        name: 'Call $400',
+                        outcomes: [
+                            { result: 'Win (they bluff)', probability: 0.25, value: 700 },
+                            { result: 'Lose (they have it)', probability: 0.75, value: -400 }
+                        ]
+                    },
+                    {
+                        name: 'Fold',
+                        outcomes: [
+                            { result: 'Fold', probability: 1.0, value: 0 }
+                        ]
+                    }
+                ],
+                explanation: {
+                    formula: 'EV(Call) = 25% × $700 + 75% × -$400 = $175 - $300 = -$125\nPot odds needed: $400 to win $700 = 36.4%',
+                    interpretation: 'This is a FOLD! You need to win 36% of the time to break even, but you only win 25%. Even though it feels like a "hero call," the math says fold. Trust the numbers!'
+                }
+            }
+        ];
+
+        let currentScenario = null;
+
+        function init() {
+            renderScenarioButtons();
+            loadScenario(scenarios[0]);
+        }
+
+        function renderScenarioButtons() {
+            const container = document.getElementById('scenarioSelector');
+            scenarios.forEach(scenario => {
+                const btn = document.createElement('button');
+                btn.className = 'scenario-btn';
+                btn.innerHTML = `
+                    <div style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">${scenario.name}</div>
+                    <div style="font-size: 11px; opacity: 0.7;">${scenario.description}</div>
+                `;
+                btn.onclick = () => loadScenario(scenario);
+                container.appendChild(btn);
+            });
+        }
+
+        function loadScenario(scenario) {
+            currentScenario = scenario;
+
+            // Update active button
+            document.querySelectorAll('.scenario-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', scenarios[idx].id === scenario.id);
+            });
+
+            // Render tree
+            renderDecisionTree(scenario);
+
+            // Calculate and display EV
+            displayEVSummary(scenario);
+        }
+
+        function calculateEV(action) {
+            let totalEV = 0;
+
+            action.outcomes.forEach(outcome => {
+                if (outcome.subDecision) {
+                    // Has sub-decision, calculate weighted EV
+                    let subEV = 0;
+                    outcome.subDecision.branches.forEach(branch => {
+                        subEV += branch.probability * branch.value;
+                    });
+                    totalEV += outcome.probability * subEV;
+                } else {
+                    totalEV += outcome.probability * outcome.value;
+                }
+            });
+
+            return totalEV;
+        }
+
+        function displayEVSummary(scenario) {
+            const container = document.getElementById('evResults');
+            container.innerHTML = '';
+
+            let bestEV = -Infinity;
+            let bestAction = null;
+
+            scenario.actions.forEach(action => {
+                const ev = calculateEV(action);
+                
+                if (ev > bestEV) {
+                    bestEV = ev;
+                    bestAction = action.name;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'ev-item' + (ev === bestEV ? ' best-action' : '');
+                item.innerHTML = `
+                    <span class="ev-action">${action.name}</span>
+                    <span class="ev-value ${ev >= 0 ? 'positive' : 'negative'}">
+                        ${ev >= 0 ? '+' : ''}$${ev.toFixed(2)}
+                    </span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function renderDecisionTree(scenario) {
+            const container = document.getElementById('treeContainer');
+            container.innerHTML = '';
+
+            // Main decision node
+            const decisionNode = document.createElement('div');
+            decisionNode.className = 'decision-node';
+            decisionNode.innerHTML = `
+                <div class="node-title">${scenario.situation.title}</div>
+                <div class="node-description">${scenario.situation.description}</div>
+            `;
+            container.appendChild(decisionNode);
+
+            // Branches for each action
+            const branchesContainer = document.createElement('div');
+            branchesContainer.className = 'branches';
+
+            scenario.actions.forEach(action => {
+                const branch = document.createElement('div');
+                branch.className = 'branch';
+
+                const actionLabel = document.createElement('div');
+                actionLabel.className = 'action-label';
+                actionLabel.textContent = action.name;
+                branch.appendChild(actionLabel);
+
+                const branchLine = document.createElement('div');
+                branchLine.className = 'branch-line';
+                branch.appendChild(branchLine);
+
+                // Calculate EV for this action
+                const ev = calculateEV(action);
+
+                // Render outcomes
+                action.outcomes.forEach(outcome => {
+                    const outcomeNode = document.createElement('div');
+                    
+                    if (outcome.subDecision) {
+                        // Has sub-decision
+                        outcomeNode.innerHTML = `
+                            <div class="outcome-node">
+                                <div class="outcome-label">${outcome.result}</div>
+                                <div class="outcome-probability">${(outcome.probability * 100).toFixed(0)}% chance</div>
+                            </div>
+                            <div class="sub-decision">
+                                <div style="font-size: 14px; font-weight: 700; margin-bottom: 15px; text-align: center;">
+                                    ${outcome.subDecision.title}
+                                </div>
+                                ${outcome.subDecision.branches.map(subBranch => `
+                                    <div class="outcome-node ${subBranch.value > 0 ? 'win' : 'lose'}" style="margin-bottom: 10px;">
+                                        <div class="outcome-label">${subBranch.result}</div>
+                                        <div class="outcome-value">${subBranch.value >= 0 ? '+' : ''}$${subBranch.value}</div>
+                                        <div class="outcome-probability">${(subBranch.probability * 100).toFixed(0)}%</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        outcomeNode.className = `outcome-node ${outcome.value > 0 ? 'win' : outcome.value < 0 ? 'lose' : ''}`;
+                        outcomeNode.innerHTML = `
+                            <div class="outcome-label">${outcome.result}</div>
+                            <div class="outcome-value">${outcome.value >= 0 ? '+' : ''}$${outcome.value}</div>
+                            <div class="outcome-probability">${(outcome.probability * 100).toFixed(0)}% chance</div>
+                        `;
+                    }
+                    
+                    branch.appendChild(outcomeNode);
+                });
+
+                // EV calculation display
+                const evCalc = document.createElement('div');
+                evCalc.className = 'ev-calculation';
+                evCalc.innerHTML = `
+                    <div style="opacity: 0.8;">Expected Value:</div>
+                    <div class="ev-result ${ev >= 0 ? 'positive' : 'negative'}">
+                        ${ev >= 0 ? '+' : ''}$${ev.toFixed(2)}
+                    </div>
+                `;
+                branch.appendChild(evCalc);
+
+                branchesContainer.appendChild(branch);
+            });
+
+            container.appendChild(branchesContainer);
+
+            // Add explanation
+            const formulaBox = document.createElement('div');
+            formulaBox.className = 'formula-box';
+            formulaBox.innerHTML = `
+                <div class="formula-title">📐 EV Calculation</div>
+                <div class="formula">${scenario.explanation.formula.replace(/\n/g, '<br>')}</div>
+                <div style="margin-top: 15px; font-size: 14px; line-height: 1.6;">
+                    <strong>Interpretation:</strong> ${scenario.explanation.interpretation}
+                </div>
+            `;
+            container.appendChild(formulaBox);
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

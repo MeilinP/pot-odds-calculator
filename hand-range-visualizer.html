@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texas Hold'em Hand Range Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 36px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .grid-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hand-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .hand-cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .hand-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .hand-cell.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .hand-cell.pair {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .hand-cell.suited {
+            background: rgba(34, 139, 34, 0.2);
+        }
+
+        .hand-cell.offsuit {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .hand-cell.pair.selected {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .hand-cell.suited.selected {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* Strength tier coloring - show when tier mode is active */
+        .tier-mode .hand-cell.tier-premium {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            border-color: #ff6b6b;
+        }
+
+        .tier-mode .hand-cell.tier-strong {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f093fb;
+        }
+
+        .tier-mode .hand-cell.tier-playable {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-color: #4facfe;
+        }
+
+        .tier-mode .hand-cell.tier-marginal {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border-color: #43e97b;
+        }
+
+        .tier-mode .hand-cell.tier-speculative {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            border-color: #ffd89b;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #fff;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .preset-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .action-buttons {
+            display: grid;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.clear {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .legend-color.pair {
+            background: rgba(255, 215, 0, 0.3);
+        }
+
+        .legend-color.suited {
+            background: rgba(34, 139, 34, 0.3);
+        }
+
+        .legend-color.offsuit {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .info-text {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .explanation-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .explanation-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation-content {
+            font-size: 14px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .explanation-content strong {
+            color: #4facfe;
+        }
+
+        .tier-toggle {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .tier-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tier-toggle.active {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border-color: #43e97b;
+        }
+
+        .tier-legend {
+            display: grid;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tier-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .tier-legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hand-cell {
+                font-size: 10px;
+            }
+            
+            .preset-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🃏 Hand Range Visualizer</h1>
+        
+        <div class="main-content">
+            <div class="grid-section">
+                <div class="hand-grid" id="handGrid"></div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color pair"></div>
+                        <span>Pocket Pairs</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color suited"></div>
+                        <span>Suited</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color offsuit"></div>
+                        <span>Offsuit</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-section">
+                    <div class="control-title">Position Presets</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="loadPreset('utg')">UTG</button>
+                        <button class="preset-btn" onclick="loadPreset('mp')">MP</button>
+                        <button class="preset-btn" onclick="loadPreset('co')">CO</button>
+                        <button class="preset-btn" onclick="loadPreset('btn')">BTN</button>
+                        <button class="preset-btn" onclick="loadPreset('sb')">SB</button>
+                        <button class="preset-btn" onclick="loadPreset('bb')">BB</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="control-title">Strategy Presets</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="loadPreset('tight')">Tight</button>
+                        <button class="preset-btn" onclick="loadPreset('loose')">Loose</button>
+                        <button class="preset-btn" onclick="loadPreset('premium')">Premium</button>
+                        <button class="preset-btn" onclick="loadPreset('broadways')">Broadways</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="control-title">3-Bet Ranges</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="loadPreset('3bet_value')">3-Bet Value</button>
+                        <button class="preset-btn" onclick="loadPreset('3bet_bluff')">3-Bet Bluff</button>
+                        <button class="preset-btn" onclick="loadPreset('3bet_vs_steal')">vs BTN Steal</button>
+                        <button class="preset-btn" onclick="loadPreset('4bet')">4-Bet Range</button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <button class="tier-toggle" id="tierToggle" onclick="toggleTierMode()">
+                        🎨 Show Hand Strength Tiers
+                    </button>
+                    <div class="tier-legend" id="tierLegend" style="display: none;">
+                        <div class="tier-legend-item">
+                            <div class="tier-legend-color" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);"></div>
+                            <span>Premium (top 2-3%)</span>
+                        </div>
+                        <div class="tier-legend-item">
+                            <div class="tier-legend-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <span>Strong (3-10%)</span>
+                        </div>
+                        <div class="tier-legend-item">
+                            <div class="tier-legend-color" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <span>Playable (10-25%)</span>
+                        </div>
+                        <div class="tier-legend-item">
+                            <div class="tier-legend-color" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                            <span>Marginal (25-40%)</span>
+                        </div>
+                        <div class="tier-legend-item">
+                            <div class="tier-legend-color" style="background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);"></div>
+                            <span>Speculative</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <div class="control-title">Actions</div>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="selectPairs()">Select All Pairs</button>
+                        <button class="action-btn" onclick="selectSuited()">Select All Suited</button>
+                        <button class="action-btn clear" onclick="clearSelection()">Clear All</button>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Hands Selected</span>
+                        <span class="stat-value" id="handsCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Range %</span>
+                        <span class="stat-value" id="rangePercent">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Combos</span>
+                        <span class="stat-value" id="combosCount">0</span>
+                    </div>
+                </div>
+
+                <div class="info-text">
+                    <strong>How to use:</strong><br>
+                    • Click hands to add/remove from range<br>
+                    • Use presets for common positions<br>
+                    • Pairs = diagonal, Suited = above, Offsuit = below
+                </div>
+
+                <div class="explanation-box" id="explanationBox" style="display: none;">
+                    <div class="explanation-title">
+                        💡 <span id="explanationTitle">Range Explanation</span>
+                    </div>
+                    <div class="explanation-content" id="explanationContent">
+                        Select a preset to see an explanation of the range strategy.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // All 169 starting hands in a 13x13 grid
+        const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const handMatrix = [];
+        const selectedHands = new Set();
+
+        // Generate the hand matrix
+        for (let row = 0; row < 13; row++) {
+            for (let col = 0; col < 13; col++) {
+                let hand;
+                if (row === col) {
+                    // Pocket pairs on diagonal
+                    hand = ranks[row] + ranks[col];
+                } else if (row < col) {
+                    // Suited hands above diagonal
+                    hand = ranks[row] + ranks[col] + 's';
+                } else {
+                    // Offsuit hands below diagonal
+                    hand = ranks[col] + ranks[row] + 'o';
+                }
+                handMatrix.push({ hand, row, col });
+            }
+        }
+
+        // Preset ranges
+        const presets = {
+            utg: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AQs', 'AJs', 'AKo'],
+            mp: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', 'AKs', 'AQs', 'AJs', 'ATs', 'KQs', 'AKo', 'AQo'],
+            co: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', 'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'KQs', 'KJs', 'QJs', 'JTs', 'AKo', 'AQo', 'AJo', 'KQo'],
+            btn: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22', 'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'KQs', 'KJs', 'KTs', 'K9s', 'QJs', 'QTs', 'JTs', 'J9s', 'T9s', 'T8s', '98s', 'AKo', 'AQo', 'AJo', 'ATo', 'KQo', 'KJo'],
+            sb: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', 'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A5s', 'A4s', 'KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'T9s', 'AKo', 'AQo', 'AJo', 'KQo'],
+            bb: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22', 'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'KQs', 'KJs', 'KTs', 'K9s', 'K8s', 'QJs', 'QTs', 'Q9s', 'JTs', 'J9s', 'T9s', 'T8s', '98s', '87s', 'AKo', 'AQo', 'AJo', 'ATo', 'A9o', 'KQo', 'KJo', 'KTo', 'QJo'],
+            tight: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AKo'],
+            loose: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22', 'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'KQs', 'KJs', 'KTs', 'K9s', 'K8s', 'QJs', 'QTs', 'Q9s', 'JTs', 'J9s', 'T9s', 'T8s', '98s', '87s', '76s', 'AKo', 'AQo', 'AJo', 'ATo', 'A9o', 'KQo', 'KJo', 'QJo'],
+            premium: ['AA', 'KK', 'QQ', 'JJ', 'AKs', 'AKo'],
+            broadways: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AJs', 'ATs', 'KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'AKo', 'AQo', 'AJo', 'ATo', 'KQo', 'KJo', 'KTo', 'QJo', 'QTo', 'JTo'],
+            '3bet_value': ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AQs', 'AKo'],
+            '3bet_bluff': ['A5s', 'A4s', 'A3s', 'A2s', 'K9s', 'K8s', 'Q9s', 'J9s', 'T8s', '97s', '87s', '76s', '65s'],
+            '3bet_vs_steal': ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', 'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'KQs', 'KJs', 'KTs', 'QJs', 'JTs', 'AKo', 'AQo', 'AJo'],
+            '4bet': ['AA', 'KK', 'QQ', 'AKs', 'AKo']
+        };
+
+        // Explanations for each preset
+        const explanations = {
+            utg: {
+                title: "UTG Opening Range (~10%)",
+                content: "Under the Gun is the <strong>tightest position</strong> because you act first post-flop with 8+ players behind. You need premium hands that play well out of position.<br><br><strong>Why these hands?</strong><br>• Premium pairs (TT+) have high equity vs any range<br>• AK/AQ suited are strong drawing hands<br>• These hands remain profitable even when called by multiple players"
+            },
+            mp: {
+                title: "Middle Position Range (~13-15%)",
+                content: "From Middle Position, you have fewer players behind, so you can <strong>open slightly wider</strong> than UTG.<br><br><strong>Additions from UTG:</strong><br>• Medium pairs (88-99) for set value<br>• ATs, KQs for playability<br>• AQo for top pair strength<br><br>Still avoiding hands that play poorly out of position."
+            },
+            co: {
+                title: "Cutoff Opening Range (~25%)",
+                content: "The Cutoff is a <strong>very profitable position</strong>. Only Button and Blinds behind you.<br><br><strong>Why wider?</strong><br>• Better position post-flop<br>• Can steal blinds more frequently<br>• Add suited connectors (JTs, T9s) for disguised strength<br>• Lower pairs (66-77) have implied odds<br><br>This is where your range starts getting creative!"
+            },
+            btn: {
+                title: "Button Opening Range (~40-50%)",
+                content: "The Button is the <strong>most powerful position</strong> in poker. You act last on every post-flop street.<br><br><strong>Why so wide?</strong><br>• Best position = more profitable hands<br>• Can steal blinds with weak holdings<br>• Play speculative hands (suited aces, connectors)<br>• All pairs are profitable<br><br>The Button is where you <strong>print money</strong> in poker!"
+            },
+            sb: {
+                title: "Small Blind Opening Range (~30%)",
+                content: "The Small Blind is <strong>tricky</strong>. You have money invested but terrible position.<br><br><strong>Strategy:</strong><br>• Raise to deny BB's equity<br>• Mix of value hands and steals<br>• Avoid marginal hands that play poorly OOP<br>• Be prepared to fold vs 3-bets<br><br>This range assumes BB defends reasonably tight."
+            },
+            bb: {
+                title: "Big Blind Defense Range (~40-50%)",
+                content: "As the Big Blind, you're <strong>getting pot odds</strong> to defend wider against late position raises.<br><br><strong>Why defend so wide?</strong><br>• Already invested 1BB<br>• Often getting 3:1 or better odds<br>• Can play speculative hands profitably<br>• Close decision hands become calls<br><br>Adjust tighter vs early position opens."
+            },
+            tight: {
+                title: "Tight Strategy (~8%)",
+                content: "Ultra-conservative approach. <strong>Only premium hands.</strong><br><br><strong>When to use:</strong><br>• Learning poker fundamentals<br>• Playing out of position<br>• Against aggressive opponents<br>• Short-handed situations where you're uncertain<br><br>Tight is right when starting out!"
+            },
+            loose: {
+                title: "Loose Strategy (~30-35%)",
+                content: "Aggressive, wide range for <strong>experienced players</strong>.<br><br><strong>When to use:</strong><br>• In position<br>• Against tight opponents<br>• When you have skill edge post-flop<br>• Deep stacked play<br><br>⚠️ Requires strong post-flop skills to be profitable."
+            },
+            premium: {
+                title: "Premium Hands Only (~3%)",
+                content: "The absolute <strong>strongest hands in poker</strong>.<br><br><strong>When to use:</strong><br>• Very first hand learning poker<br>• Extremely tight/passive tables<br>• Short stacked (push/fold situations)<br>• 4-betting ranges<br><br>These hands dominate most opponent ranges."
+            },
+            broadways: {
+                title: "Broadway Cards Strategy (~20%)",
+                content: "Focus on <strong>high card strength</strong> - all Ten or better.<br><br><strong>Why Broadways?</strong><br>• Make top pairs<br>• Strong straight potential (broadway straights)<br>• Easier to play post-flop<br>• Less dominated than lower cards<br><br>Good balance of playability and strength."
+            },
+            '3bet_value': {
+                title: "3-Bet for Value (~8%)",
+                content: "These are your <strong>premium 3-betting hands</strong> - you want to get called by worse.<br><br><strong>Strategy:</strong><br>• Strong pairs (JJ+) that dominate calling ranges<br>• AK for equity and playability<br>• AQs has good equity vs typical open ranges<br><br>You're 3-betting because you want to <strong>build a big pot with the best hand</strong>."
+            },
+            '3bet_bluff': {
+                title: "3-Bet Bluff Range (~5-8%)",
+                content: "These hands have good <strong>blocker and playability</strong> properties but aren't strong enough to call.<br><br><strong>Why these hands?</strong><br>• Suited aces block opponent's strong aces<br>• Can make strong flushes/straights when called<br>• Have fold equity pre-flop<br>• Too weak to flat call, but good semi-bluff candidates<br><br><strong>Key concept:</strong> Polarized 3-betting (value + bluffs, not calling range)."
+            },
+            '3bet_vs_steal': {
+                title: "3-Bet vs Late Position Steal (~25%)",
+                content: "Defending vs Button/CO steals from the Blinds with a <strong>wide 3-bet range</strong>.<br><br><strong>Why so wide?</strong><br>• Late position opens very wide (40-50%)<br>• You can 3-bet wider for value<br>• Deny their position advantage<br>• Reclaim equity with aggressive play<br><br>Mix of value (top), bluffs (suited wheel aces), and semi-bluffs (suited broadways)."
+            },
+            '4bet': {
+                title: "4-Bet Range (~3%)",
+                content: "Your <strong>strongest possible holdings</strong> when facing a 3-bet.<br><br><strong>Why so tight?</strong><br>• Opponent showed massive strength<br>• Pot is already very large<br>• Usually going to see a flop or all-in<br>• Need high equity vs their 3-bet range<br><br><strong>QQ is marginal</strong> - sometimes 4-bet, sometimes call depending on opponent and position."
+            }
+        };
+
+        // Hand strength tiers
+        const handTiers = {
+            premium: ['AA', 'KK', 'QQ', 'AKs', 'AKo'],  // Top 2-3%
+            strong: ['JJ', 'TT', '99', 'AQs', 'AJs', 'KQs', 'AQo'],  // 3-10%
+            playable: ['88', '77', '66', 'ATs', 'A9s', 'KJs', 'KTs', 'QJs', 'JTs', 'AJo', 'KQo'],  // 10-25%
+            marginal: ['55', '44', '33', '22', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'K9s', 'Q9s', 'QTs', 'J9s', 'T9s', 'ATo', 'KJo'],  // 25-40%
+            speculative: ['K8s', 'K7s', 'K6s', 'Q8s', 'J8s', 'T8s', '98s', '87s', '76s', '65s', '54s', 'A9o', 'A8o', 'KTo', 'QJo', 'QTo', 'JTo']  // 40%+
+        };
+
+        // Initialize the grid
+        function initGrid() {
+            const grid = document.getElementById('handGrid');
+            
+            handMatrix.forEach(({ hand, row, col }) => {
+                const cell = document.createElement('div');
+                cell.className = 'hand-cell';
+                cell.textContent = hand;
+                cell.dataset.hand = hand;
+                
+                // Add type class
+                if (row === col) {
+                    cell.classList.add('pair');
+                } else if (hand.includes('s')) {
+                    cell.classList.add('suited');
+                } else {
+                    cell.classList.add('offsuit');
+                }
+                
+                // Add tier class
+                for (const [tier, hands] of Object.entries(handTiers)) {
+                    if (hands.includes(hand)) {
+                        cell.classList.add(`tier-${tier}`);
+                        break;
+                    }
+                }
+                
+                cell.addEventListener('click', () => toggleHand(hand));
+                grid.appendChild(cell);
+            });
+            
+            updateStats();
+        }
+
+        // Toggle hand selection
+        function toggleHand(hand) {
+            if (selectedHands.has(hand)) {
+                selectedHands.delete(hand);
+                document.querySelector(`[data-hand="${hand}"]`).classList.remove('selected');
+            } else {
+                selectedHands.add(hand);
+                document.querySelector(`[data-hand="${hand}"]`).classList.add('selected');
+            }
+            updateStats();
+        }
+
+        // Load preset range
+        function loadPreset(presetName) {
+            clearSelection();
+            const preset = presets[presetName];
+            preset.forEach(hand => {
+                selectedHands.add(hand);
+                const cell = document.querySelector(`[data-hand="${hand}"]`);
+                if (cell) {
+                    cell.classList.add('selected');
+                }
+            });
+            updateStats();
+            
+            // Show explanation if available
+            if (explanations[presetName]) {
+                const explanationBox = document.getElementById('explanationBox');
+                const explanationTitle = document.getElementById('explanationTitle');
+                const explanationContent = document.getElementById('explanationContent');
+                
+                explanationTitle.textContent = explanations[presetName].title;
+                explanationContent.innerHTML = explanations[presetName].content;
+                explanationBox.style.display = 'block';
+            }
+        }
+
+        // Clear all selections
+        function clearSelection() {
+            selectedHands.clear();
+            document.querySelectorAll('.hand-cell').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            updateStats();
+        }
+
+        // Select all pairs
+        function selectPairs() {
+            ranks.forEach(rank => {
+                const hand = rank + rank;
+                selectedHands.add(hand);
+                document.querySelector(`[data-hand="${hand}"]`).classList.add('selected');
+            });
+            updateStats();
+        }
+
+        // Select all suited hands
+        function selectSuited() {
+            handMatrix.forEach(({ hand }) => {
+                if (hand.includes('s')) {
+                    selectedHands.add(hand);
+                    document.querySelector(`[data-hand="${hand}"]`).classList.add('selected');
+                }
+            });
+            updateStats();
+        }
+
+        // Calculate number of combos
+        function calculateCombos(hand) {
+            if (hand.length === 2) {
+                // Pocket pair
+                return 6;
+            } else if (hand.includes('s')) {
+                // Suited
+                return 4;
+            } else {
+                // Offsuit
+                return 12;
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const handsCount = selectedHands.size;
+            const totalCombos = Array.from(selectedHands).reduce((sum, hand) => sum + calculateCombos(hand), 0);
+            const rangePercent = ((totalCombos / 1326) * 100).toFixed(1);
+            
+            document.getElementById('handsCount').textContent = handsCount;
+            document.getElementById('rangePercent').textContent = rangePercent + '%';
+            document.getElementById('combosCount').textContent = totalCombos;
+        }
+
+        // Toggle tier visualization mode
+        function toggleTierMode() {
+            const gridSection = document.querySelector('.grid-section');
+            const tierToggle = document.getElementById('tierToggle');
+            const tierLegend = document.getElementById('tierLegend');
+            
+            if (gridSection.classList.contains('tier-mode')) {
+                gridSection.classList.remove('tier-mode');
+                tierToggle.classList.remove('active');
+                tierToggle.textContent = '🎨 Show Hand Strength Tiers';
+                tierLegend.style.display = 'none';
+            } else {
+                gridSection.classList.add('tier-mode');
+                tierToggle.classList.add('active');
+                tierToggle.textContent = '✓ Showing Hand Tiers';
+                tierLegend.style.display = 'grid';
+            }
+        }
+
+        // Initialize on load
+        initGrid();
+    </script>
+</body>
+</html>

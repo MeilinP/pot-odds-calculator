@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Training Hub - Master Texas Hold'em</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title {
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .hero-description {
+            font-size: 16px;
+            opacity: 0.8;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            opacity: 0.8;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .tool-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .tool-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .tool-category {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-bottom: 15px;
+            color: #4facfe;
+        }
+
+        .tool-description {
+            font-size: 15px;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .tool-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .tool-features li {
+            font-size: 13px;
+            padding: 6px 0;
+            opacity: 0.8;
+        }
+
+        .tool-features li::before {
+            content: "✓ ";
+            color: #2ecc71;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .tool-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .badge-calculator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .badge-visualizer {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .badge-trainer {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .badge-advanced {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .features-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 50px 20px;
+            border-radius: 20px;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 50px 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border-radius: 20px;
+            margin-bottom: 60px;
+        }
+
+        .cta-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .cta-text {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+            font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+
+        .progress-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4facfe;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-title">🃏 Poker Training Hub</div>
+        <div class="hero-subtitle">Master Texas Hold'em with Professional Tools</div>
+        <div class="hero-description">
+            A comprehensive suite of interactive calculators, visualizers, and trainers 
+            designed to elevate your poker game from beginner to advanced.
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="progress-section">
+            <div class="progress-title">Your Training Arsenal</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Training Tools</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Free Access</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Practice Sessions</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Calculators & Tools</div>
+        <div class="section-subtitle">Make mathematically optimal decisions with precision calculators</div>
+
+        <div class="tools-grid">
+            <a href="pot-odds-calculator.html" class="tool-card">
+                <div class="tool-icon">🎲</div>
+                <div class="tool-category">Calculator</div>
+                <div class="tool-title">Pot Odds Calculator</div>
+                <div class="tool-description">
+                    Calculate pot odds, equity needed, and expected value to make profitable calling decisions.
+                </div>
+                <ul class="tool-features">
+                    <li>Visual pie charts and bar graphs</li>
+                    <li>Real-time EV calculations</li>
+                    <li>Color-coded decision guidance</li>
+                    <li>Flop and turn scenarios</li>
+                </ul>
+                <span class="tool-badge badge-calculator">Fundamentals</span>
+            </a>
+
+            <a href="equity-calculator.html" class="tool-card">
+                <div class="tool-icon">⚡</div>
+                <div class="tool-category">Calculator</div>
+                <div class="tool-title">Equity Calculator</div>
+                <div class="tool-description">
+                    Run Monte Carlo simulations to calculate your exact winning percentage against opponent hands.
+                </div>
+                <ul class="tool-features">
+                    <li>10,000 hand simulations</li>
+                    <li>Hand vs hand equity</li>
+                    <li>Works on any street</li>
+                    <li>Win/loss/tie percentages</li>
+                </ul>
+                <span class="tool-badge badge-calculator">Fundamentals</span>
+            </a>
+
+            <a href="ev-decision-tree.html" class="tool-card">
+                <div class="tool-icon">🌳</div>
+                <div class="tool-category">Calculator</div>
+                <div class="tool-title">EV Decision Tree</div>
+                <div class="tool-description">
+                    Map out complex multi-street decisions and calculate expected value for each path.
+                </div>
+                <ul class="tool-features">
+                    <li>Visual decision trees</li>
+                    <li>Multi-outcome scenarios</li>
+                    <li>Automatic EV calculation</li>
+                    <li>5 pre-loaded situations</li>
+                </ul>
+                <span class="tool-badge badge-advanced">Advanced</span>
+            </a>
+        </div>
+
+        <div class="section-title">Learning & Strategy</div>
+        <div class="section-subtitle">Understand ranges, optimal play, and strategic concepts</div>
+
+        <div class="tools-grid">
+            <a href="hand-range-visualizer.html" class="tool-card">
+                <div class="tool-icon">📊</div>
+                <div class="tool-category">Visualizer</div>
+                <div class="tool-title">Hand Range Visualizer</div>
+                <div class="tool-description">
+                    Interactive 13x13 grid showing starting hand ranges for every position with detailed explanations.
+                </div>
+                <ul class="tool-features">
+                    <li>Position-based presets (UTG, BTN, etc.)</li>
+                    <li>3-bet and 4-bet ranges</li>
+                    <li>Hand strength tier coloring</li>
+                    <li>Real-time range percentages</li>
+                </ul>
+                <span class="tool-badge badge-visualizer">Strategy</span>
+            </a>
+
+            <a href="gto-trainer.html" class="tool-card">
+                <div class="tool-icon">🎓</div>
+                <div class="tool-category">Trainer</div>
+                <div class="tool-title">GTO Trainer</div>
+                <div class="tool-description">
+                    Learn Game Theory Optimal strategy through 8 real poker scenarios with mixed strategy frequencies.
+                </div>
+                <ul class="tool-features">
+                    <li>8 interactive scenarios</li>
+                    <li>Pre-flop and post-flop spots</li>
+                    <li>Frequency charts (e.g., "Bet 65%, Check 35%")</li>
+                    <li>Detailed strategic explanations</li>
+                </ul>
+                <span class="tool-badge badge-trainer">Advanced</span>
+            </a>
+
+            <a href="poker-quiz.html" class="tool-card">
+                <div class="tool-icon">🎯</div>
+                <div class="tool-category">Trainer</div>
+                <div class="tool-title">Poker Situations Quiz</div>
+                <div class="tool-description">
+                    Test your decision-making skills with real poker scenarios across three difficulty levels.
+                </div>
+                <ul class="tool-features">
+                    <li>Beginner, Intermediate, Advanced</li>
+                    <li>15 total scenarios (5 per level)</li>
+                    <li>Instant feedback with explanations</li>
+                    <li>Performance tracking and scoring</li>
+                </ul>
+                <span class="tool-badge badge-trainer">Interactive</span>
+            </a>
+        </div>
+
+        <div class="features-section">
+            <div class="section-title">Why This Training Hub?</div>
+            <div class="section-subtitle">Built by a poker enthusiast for serious players</div>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">💯</div>
+                    <div class="feature-title">100% Free</div>
+                    <div class="feature-description">
+                        All tools are completely free with no hidden costs or premium tiers. Train as much as you want.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📚</div>
+                    <div class="feature-title">Educational Focus</div>
+                    <div class="feature-description">
+                        Every tool includes detailed explanations so you understand the "why" behind optimal plays.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">Beautiful UI</div>
+                    <div class="feature-description">
+                        Clean, modern interface with visual charts, color coding, and intuitive design.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-title">Interactive</div>
+                    <div class="feature-description">
+                        Click, select, and experiment. All tools provide real-time feedback and calculations.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <div class="cta-title">Ready to Improve Your Game?</div>
+            <div class="cta-text">
+                Start with the fundamentals (Pot Odds, Ranges) or jump straight into advanced concepts (GTO, EV Trees).
+                <br>Every tool is designed to make you a better player.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>Poker Training Hub © 2025</div>
+        <div style="margin-top: 10px; opacity: 0.7;">
+            Built with passion for poker strategy and education
+        </div>
+    </div>
+
+    <script>
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add hover effect sound or animation (optional enhancement)
+        const cards = document.querySelectorAll('.tool-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+        });
+    </script>
+</body>
+</html>
